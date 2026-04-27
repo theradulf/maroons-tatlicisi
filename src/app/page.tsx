@@ -104,9 +104,9 @@ export default function Home() {
       <main>
         {trendingProduct && (
           <div style={{ marginBottom: '40px', padding: '0 20px' }}>
-            <h2 style={{ textAlign: 'center', color: '#ffb300', marginBottom: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '24px' }}>🔥</span> Haftanın Yıldızı <span style={{ fontSize: '24px' }}>🔥</span>
-            </h2>
+            <h1 className="section-title" style={{ marginTop: '10px', marginBottom: '20px' }}>
+              En Çok Satan
+            </h1>
             <div style={{ background: '#1a1a1a', borderRadius: '15px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', border: '1px solid #333' }}>
               {trendingProduct.imageUrl ? (
                 <img src={trendingProduct.imageUrl} alt={trendingProduct.name} style={{ width: '100%', height: '250px', objectFit: 'cover' }} />
