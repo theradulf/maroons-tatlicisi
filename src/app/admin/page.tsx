@@ -306,14 +306,16 @@ export default function AdminPage() {
   const moveCategory = async (index: number, direction: -1 | 1) => {
     if (index + direction < 0 || index + direction >= categories.length) return;
     try {
-      const catA = categories[index];
-      const catB = categories[index + direction];
-      
-      const newOrderA = catB.order !== undefined ? catB.order : index + direction;
-      const newOrderB = catA.order !== undefined ? catA.order : index;
+      const newArr = [...categories];
+      const temp = newArr[index];
+      newArr[index] = newArr[index + direction];
+      newArr[index + direction] = temp;
 
-      await updateDoc(doc(db, "categories", catA.id), { order: newOrderA });
-      await updateDoc(doc(db, "categories", catB.id), { order: newOrderB });
+      for (let i = 0; i < newArr.length; i++) {
+        if (newArr[i].order !== i) {
+          await updateDoc(doc(db, "categories", newArr[i].id), { order: i });
+        }
+      }
       fetchData();
     } catch (e) {
       console.error(e);
@@ -327,18 +329,33 @@ export default function AdminPage() {
       const index = categoryProducts.findIndex(p => p.id === product.id);
       if (index + direction < 0 || index + direction >= categoryProducts.length) return;
       
-      const prodA = categoryProducts[index];
-      const prodB = categoryProducts[index + direction];
-      
-      const newOrderA = prodB.order !== undefined ? prodB.order : index + direction;
-      const newOrderB = prodA.order !== undefined ? prodA.order : index;
+      const newArr = [...categoryProducts];
+      const temp = newArr[index];
+      newArr[index] = newArr[index + direction];
+      newArr[index + direction] = temp;
 
-      await updateDoc(doc(db, "products", prodA.id), { order: newOrderA });
-      await updateDoc(doc(db, "products", prodB.id), { order: newOrderB });
+      for (let i = 0; i < newArr.length; i++) {
+        if (newArr[i].order !== i) {
+          await updateDoc(doc(db, "products", newArr[i].id), { order: i });
+        }
+      }
       fetchData();
     } catch (e) {
       console.error(e);
       alert("Sıralama değiştirilirken hata oluştu.");
+    }
+  };
+
+  const toggleCategoryVisibility = async (category: any) => {
+    try {
+      const currentVisibility = category.isVisible !== false;
+      await updateDoc(doc(db, "categories", category.id), {
+        isVisible: !currentVisibility
+      });
+      fetchData();
+    } catch (e) {
+      console.error(e);
+      alert("Hata oluştu.");
     }
   };
 
@@ -426,10 +443,15 @@ export default function AdminPage() {
         <h3>Mevcut Kategoriler</h3>
         {categories.map((c, index) => (
           <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #444', padding: '10px 0' }}>
-            <div><strong>{c.title}</strong></div>
+            <div style={{ opacity: c.isVisible === false ? 0.5 : 1 }}>
+               <strong>{c.title}</strong> {c.isVisible === false && <span style={{color: '#ed6c02'}}>(Gizlendi)</span>}
+            </div>
             <div style={{ display: 'flex', gap: '5px' }}>
               <button onClick={() => moveCategory(index, -1)} disabled={index === 0} className="admin-btn" style={{ background: '#555', padding: '5px 10px', opacity: index === 0 ? 0.3 : 1 }}>▲</button>
               <button onClick={() => moveCategory(index, 1)} disabled={index === categories.length - 1} className="admin-btn" style={{ background: '#555', padding: '5px 10px', opacity: index === categories.length - 1 ? 0.3 : 1 }}>▼</button>
+              <button onClick={() => toggleCategoryVisibility(c)} className="admin-btn" style={{ background: c.isVisible === false ? '#2e7d32' : '#ed6c02', padding: '5px 10px' }}>
+                {c.isVisible === false ? "Göster" : "Gizle"}
+              </button>
               <button onClick={() => startEditingCategory(c)} className="admin-btn" style={{ background: '#1976d2', padding: '5px 10px' }}>Düzenle</button>
               <button onClick={() => deleteCategory(c.id)} className="admin-btn" style={{ background: '#d32f2f', padding: '5px 10px' }}>Sil</button>
             </div>

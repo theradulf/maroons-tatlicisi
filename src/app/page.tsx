@@ -63,9 +63,10 @@ export default function Home() {
             imageUrl: c.imageUrl || "",
             gradient: c.gradient || "linear-gradient(90deg, rgba(115, 20, 35, 0.9) 0%, rgba(115, 20, 35, 0.65) 50%, rgba(0,0,0,0.3) 100%)",
             order: typeof c.order === 'number' ? c.order : i,
+            isVisible: c.isVisible !== false,
             products: sortedProds.filter(p => (p as any).categoryId === c.id && p.isVisible !== false)
           };
-        }).sort((a, b) => a.order - b.order);
+        }).filter(c => c.isVisible).sort((a, b) => a.order - b.order);
         
         setCategories(sortedCats as Category[]);
 
