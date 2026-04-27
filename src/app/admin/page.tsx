@@ -15,6 +15,7 @@ export default function AdminPage() {
   
   const [newCatTitle, setNewCatTitle] = useState("");
   const [newCatImage, setNewCatImage] = useState("");
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
 
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [newProdName, setNewProdName] = useState("");
@@ -22,6 +23,18 @@ export default function AdminPage() {
   const [newProdPrice, setNewProdPrice] = useState("");
   const [newProdCat, setNewProdCat] = useState("");
   const [newProdImage, setNewProdImage] = useState("");
+
+  const startEditingCategory = (category: any) => {
+    setEditingCategoryId(category.id);
+    setNewCatTitle(category.title);
+    setNewCatImage(category.imageUrl || "");
+  };
+
+  const cancelEditingCategory = () => {
+    setEditingCategoryId(null);
+    setNewCatTitle("");
+    setNewCatImage("");
+  };
 
   const startEditingProduct = (product: any) => {
     setEditingProductId(product.id);
@@ -76,20 +89,37 @@ export default function AdminPage() {
     signOut(auth);
   };
 
-  const addCategory = async () => {
+  const saveCategory = async () => {
     if (!newCatTitle) return;
     try {
-      await addDoc(collection(db, "categories"), {
-        title: newCatTitle,
-        imageUrl: newCatImage,
-        gradient: "linear-gradient(90deg, rgba(115, 20, 35, 0.9) 0%, rgba(115, 20, 35, 0.65) 50%, rgba(0,0,0,0.3) 100%)"
-      });
-      setNewCatTitle("");
-      setNewCatImage("");
+      if (editingCategoryId) {
+        await updateDoc(doc(db, "categories", editingCategoryId), {
+          title: newCatTitle,
+          imageUrl: newCatImage
+        });
+      } else {
+        await addDoc(collection(db, "categories"), {
+          title: newCatTitle,
+          imageUrl: newCatImage,
+          gradient: "linear-gradient(90deg, rgba(115, 20, 35, 0.9) 0%, rgba(115, 20, 35, 0.65) 50%, rgba(0,0,0,0.3) 100%)"
+        });
+      }
+      cancelEditingCategory();
       fetchData();
     } catch (e) {
       console.error(e);
       alert("Hata oluştu.");
+    }
+  };
+
+  const deleteCategory = async (id: string) => {
+    if (confirm("Kategoriyi silerseniz içindeki ürünler menüde çıkmayabilir. Emin misiniz?")) {
+      try {
+        await deleteDoc(doc(db, "categories", id));
+        fetchData();
+      } catch (e) {
+        console.error(e);
+      }
     }
   };
 
@@ -222,7 +252,7 @@ export default function AdminPage() {
       </div>
 
       <div className="admin-card">
-        <h3>Yeni Kategori Ekle</h3>
+        <h3>{editingCategoryId ? "Kategoriyi Düzenle" : "Yeni Kategori Ekle"}</h3>
         <input 
           placeholder="Kategori Adı" 
           className="admin-input" 
@@ -235,7 +265,27 @@ export default function AdminPage() {
           value={newCatImage} 
           onChange={e => setNewCatImage(e.target.value)} 
         />
-        <button onClick={addCategory} className="admin-btn">Kategori Ekle</button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={saveCategory} className="admin-btn">
+            {editingCategoryId ? "Kategoriyi Güncelle" : "Kategori Ekle"}
+          </button>
+          {editingCategoryId && (
+            <button onClick={cancelEditingCategory} className="admin-btn" style={{ background: '#555' }}>İptal</button>
+          )}
+        </div>
+      </div>
+
+      <div className="admin-card">
+        <h3>Mevcut Kategoriler</h3>
+        {categories.map(c => (
+          <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #444', padding: '10px 0' }}>
+            <div><strong>{c.title}</strong></div>
+            <div style={{ display: 'flex', gap: '5px' }}>
+              <button onClick={() => startEditingCategory(c)} className="admin-btn" style={{ background: '#1976d2', padding: '5px 10px' }}>Düzenle</button>
+              <button onClick={() => deleteCategory(c.id)} className="admin-btn" style={{ background: '#d32f2f', padding: '5px 10px' }}>Sil</button>
+            </div>
+          </div>
+        ))}
       </div>
 
       <div className="admin-card">

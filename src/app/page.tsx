@@ -29,6 +29,8 @@ export default function Home() {
   const [openCategoryId, setOpenCategoryId] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [trendingProduct, setTrendingProduct] = useState<Product | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Splash screen animation
@@ -67,8 +69,10 @@ export default function Home() {
 
         const trend = prods.find(p => p.isTrending && p.isVisible !== false);
         setTrendingProduct(trend || null);
+        setIsLoading(false);
       } catch (error) {
         console.error("Error fetching menu data", error);
+        setIsLoading(false);
       }
     }
     
@@ -82,6 +86,14 @@ export default function Home() {
       setOpenCategoryId(id);
     }
   };
+
+  const filteredCategories = categories.map(cat => ({
+    ...cat,
+    products: cat.products.filter(p => 
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (p.desc && p.desc.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
+  })).filter(cat => cat.products.length > 0);
 
   return (
     <>
@@ -125,8 +137,60 @@ export default function Home() {
         )}
 
         <h1 className="section-title">Menümüz</h1>
+        
+        <div style={{ padding: '0 20px', marginBottom: '30px' }}>
+          <input 
+            type="text" 
+            placeholder="🔍 Tatlı veya içerik arayın..." 
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              // Auto-open first category when searching
+              if (e.target.value.length > 0 && filteredCategories.length > 0) {
+                setOpenCategoryId(filteredCategories[0].id);
+              }
+            }}
+            style={{ 
+              width: '100%', 
+              padding: '15px 20px', 
+              borderRadius: '25px', 
+              border: '1px solid #444', 
+              background: '#1a1a1a', 
+              color: '#fff',
+              fontSize: '16px',
+              outline: 'none',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
+            }}
+          />
+        </div>
+
+        {/* Loading Spinner */}
+        {isLoading && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100px' }}>
+            <div style={{ 
+              width: '40px', 
+              height: '40px', 
+              border: '4px solid rgba(115, 20, 35, 0.3)', 
+              borderTopColor: '#731423', 
+              borderRadius: '50%', 
+              animation: 'spin 1s linear infinite' 
+            }}></div>
+            <style>{`
+              @keyframes spin {
+                to { transform: rotate(360deg); }
+              }
+            `}</style>
+          </div>
+        )}
+
         <div id="menu-container">
-          {categories.map((category) => (
+          {!isLoading && filteredCategories.length === 0 && searchQuery && (
+            <div style={{ textAlign: 'center', color: '#aaa', marginTop: '20px' }}>
+              Aramanıza uygun sonuç bulunamadı.
+            </div>
+          )}
+          
+          {filteredCategories.map((category) => (
             <div key={category.id} className="category-wrapper">
               <div className="category-banner" onClick={() => toggleCategory(category.id)}>
                 {category.imageUrl ? (
