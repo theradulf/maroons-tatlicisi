@@ -16,11 +16,30 @@ export default function AdminPage() {
   const [newCatTitle, setNewCatTitle] = useState("");
   const [newCatImage, setNewCatImage] = useState("");
 
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [newProdName, setNewProdName] = useState("");
   const [newProdDesc, setNewProdDesc] = useState("");
   const [newProdPrice, setNewProdPrice] = useState("");
   const [newProdCat, setNewProdCat] = useState("");
   const [newProdImage, setNewProdImage] = useState("");
+
+  const startEditingProduct = (product: any) => {
+    setEditingProductId(product.id);
+    setNewProdName(product.name);
+    setNewProdDesc(product.desc || "");
+    setNewProdPrice(product.price.toString());
+    setNewProdCat(product.categoryId);
+    setNewProdImage(product.imageUrl || "");
+  };
+
+  const cancelEditing = () => {
+    setEditingProductId(null);
+    setNewProdName("");
+    setNewProdDesc("");
+    setNewProdPrice("");
+    setNewProdCat("");
+    setNewProdImage("");
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -74,20 +93,48 @@ export default function AdminPage() {
     }
   };
 
-  const addProduct = async () => {
+  const saveProduct = async () => {
     if (!newProdName || !newProdPrice || !newProdCat) return;
+    
     try {
-      await addDoc(collection(db, "products"), {
-        name: newProdName,
-        desc: newProdDesc,
-        price: Number(newProdPrice),
-        categoryId: newProdCat,
-        imageUrl: newProdImage
-      });
-      setNewProdName("");
-      setNewProdDesc("");
-      setNewProdPrice("");
-      setNewProdImage("");
+      const currentPrice = Number(newProdPrice);
+      
+      if (editingProductId) {
+        // Editing existing product
+        const existingProduct = products.find(p => p.id === editingProductId);
+        if (!existingProduct) return;
+        
+        const updateData: any = {
+          name: newProdName,
+          desc: newProdDesc,
+          price: currentPrice,
+          categoryId: newProdCat,
+          imageUrl: newProdImage
+        };
+        
+        // Price history logic
+        if (existingProduct.price !== currentPrice) {
+          const historyEntry = {
+            oldPrice: existingProduct.price,
+            date: new Date().toISOString()
+          };
+          updateData.priceHistory = [...(existingProduct.priceHistory || []), historyEntry];
+        }
+        
+        await updateDoc(doc(db, "products", editingProductId), updateData);
+      } else {
+        // Adding new product
+        await addDoc(collection(db, "products"), {
+          name: newProdName,
+          desc: newProdDesc,
+          price: currentPrice,
+          categoryId: newProdCat,
+          imageUrl: newProdImage,
+          priceHistory: []
+        });
+      }
+      
+      cancelEditing();
       fetchData();
     } catch (e) {
       console.error(e);
@@ -157,7 +204,7 @@ export default function AdminPage() {
       </div>
 
       <div className="admin-card">
-        <h3>Yeni Ürün Ekle</h3>
+        <h3>{editingProductId ? "Ürünü Düzenle" : "Yeni Ürün Ekle"}</h3>
         <select className="admin-input" value={newProdCat} onChange={e => setNewProdCat(e.target.value)}>
           <option value="">-- Kategori Seçin --</option>
           {categories.map(c => (
@@ -189,17 +236,41 @@ export default function AdminPage() {
           value={newProdImage} 
           onChange={e => setNewProdImage(e.target.value)} 
         />
-        <button onClick={addProduct} className="admin-btn">Ürün Ekle</button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={saveProduct} className="admin-btn">
+            {editingProductId ? "Güncelle" : "Ürün Ekle"}
+          </button>
+          {editingProductId && (
+            <button onClick={cancelEditing} className="admin-btn" style={{ background: '#555' }}>İptal</button>
+          )}
+        </div>
       </div>
 
       <div className="admin-card">
         <h3>Mevcut Ürünler</h3>
         {products.map(p => (
-          <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #444', padding: '10px 0' }}>
-            <div>
-              <strong>{p.name}</strong> - {p.price} ₺
+          <div key={p.id} style={{ borderBottom: '1px solid #444', padding: '15px 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <div>
+                <strong>{p.name}</strong> - {p.price} ₺
+                {p.priceHistory && p.priceHistory.length > 0 && (
+                  <div style={{ fontSize: '12px', color: '#aaa', marginTop: '5px' }}>
+                    <strong>Fiyat Geçmişi:</strong>
+                    <ul style={{ margin: '5px 0 0 20px', padding: 0 }}>
+                      {p.priceHistory.map((history: any, idx: number) => (
+                        <li key={idx}>
+                          {new Date(history.date).toLocaleDateString('tr-TR')} tarihinde {history.oldPrice} ₺ idi.
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '5px' }}>
+                <button onClick={() => startEditingProduct(p)} className="admin-btn" style={{ background: '#1976d2', padding: '5px 10px' }}>Düzenle</button>
+                <button onClick={() => deleteProduct(p.id)} className="admin-btn" style={{ background: '#d32f2f', padding: '5px 10px' }}>Sil</button>
+              </div>
             </div>
-            <button onClick={() => deleteProduct(p.id)} className="admin-btn" style={{ background: '#d32f2f', padding: '5px 10px' }}>Sil</button>
           </div>
         ))}
       </div>
