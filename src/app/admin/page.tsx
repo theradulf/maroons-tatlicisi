@@ -218,6 +218,51 @@ export default function AdminPage() {
     }
   };
 
+  const splitBeverages = async () => {
+    try {
+      const catSnap = await getDocs(collection(db, "categories"));
+      const oldCat = catSnap.docs.find(d => d.data().title === "İçecekler");
+      if (!oldCat) {
+        alert("'İçecekler' adlı kategori bulunamadı! Daha önce ismini değiştirmiş veya silmiş olabilirsiniz.");
+        return;
+      }
+      const oldCatId = oldCat.id;
+
+      const hotCatRef = await addDoc(collection(db, "categories"), {
+        title: "Sıcak İçecekler",
+        imageUrl: "https://images.unsplash.com/photo-1541167760496-1628856ab772?q=80&w=400&auto=format&fit=crop",
+        gradient: "linear-gradient(90deg, rgba(115, 20, 35, 0.9) 0%, rgba(115, 20, 35, 0.65) 50%, rgba(0,0,0,0.3) 100%)"
+      });
+      const coldCatRef = await addDoc(collection(db, "categories"), {
+        title: "Soğuk İçecekler",
+        imageUrl: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?q=80&w=400&auto=format&fit=crop",
+        gradient: "linear-gradient(90deg, rgba(115, 20, 35, 0.9) 0%, rgba(115, 20, 35, 0.65) 50%, rgba(0,0,0,0.3) 100%)"
+      });
+
+      const prodSnap = await getDocs(collection(db, "products"));
+      const bevProds = prodSnap.docs.filter(d => d.data().categoryId === oldCatId);
+
+      const coldKeywords = ['iced', 'soğuk', 'su', 'soda', 'limonata', 'lemonade', 'cola', 'fuse tea', 'süt'];
+      
+      for (const prod of bevProds) {
+        const name = prod.data().name.toLowerCase();
+        const isCold = coldKeywords.some(kw => name.includes(kw));
+        
+        await updateDoc(doc(db, "products", prod.id), {
+          categoryId: isCold ? coldCatRef.id : hotCatRef.id
+        });
+      }
+
+      await deleteDoc(doc(db, "categories", oldCatId));
+
+      alert("İçecekler başarıyla Sıcak ve Soğuk olarak ikiye bölündü!");
+      fetchData();
+    } catch (e) {
+      console.error(e);
+      alert("Hata oluştu.");
+    }
+  };
+
   if (!user) {
     return (
       <div className="admin-container" style={{ marginTop: '100px', textAlign: 'center' }}>
@@ -248,7 +293,10 @@ export default function AdminPage() {
     <div className="admin-container">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h2>Yönetim Paneli</h2>
-        <button onClick={handleLogout} className="admin-btn">Çıkış Yap</button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={splitBeverages} className="admin-btn" style={{ background: '#1976d2' }}>İçecekleri Böl (Sıcak/Soğuk)</button>
+          <button onClick={handleLogout} className="admin-btn">Çıkış Yap</button>
+        </div>
       </div>
 
       <div className="admin-card">
