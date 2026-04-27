@@ -1,0 +1,327 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
+/* Genel Ayarlar & CSS Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    background-color: #121212; 
+    color: #f5f5f5;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+}
+
+/* --- SPLASH EKRANI (AÇILIŞ ANİMASYONU) --- */
+#splash-screen {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: #000000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
+}
+#splash-logo {
+    width: 200px; 
+    transform: scale(1.3); 
+    animation: pulse 1.5s infinite alternate;
+}
+@keyframes pulse {
+    0% { transform: scale(1.2); opacity: 0.8; }
+    100% { transform: scale(1.4); opacity: 1; }
+}
+
+/* --- ÜST BİLGİ (HEADER) --- */
+header {
+    position: sticky;
+    top: 0;
+    background-color: rgba(18, 18, 18, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #333;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 65px; 
+    overflow: hidden; 
+}
+header img {
+    width: 180px; 
+    transform: scale(1.6); 
+    object-fit: contain;
+    cursor: pointer;
+}
+
+/* --- ANA İÇERİK --- */
+main {
+    padding: 20px;
+    padding-bottom: 100px; 
+}
+
+.section-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    text-align: left;
+    letter-spacing: 1px;
+    margin-top: 10px;
+    color: #fff;
+}
+
+/* --- YENİ LİSTE GÖRÜNÜMÜ (BANNER + AKORDEON ÜRÜNLER) --- */
+#menu-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.category-wrapper {
+    margin-bottom: 15px;
+}
+
+/* Banner (Kategori Başlıkları) */
+.category-banner {
+    position: relative;
+    width: 100%;
+    height: 120px;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    transition: transform 0.2s;
+}
+.category-banner:active {
+    transform: scale(0.98);
+}
+.category-bg {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    object-fit: cover;
+    z-index: 1;
+}
+.category-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    /* Şık Bordo (Maroon) gradient efekti */
+    background: linear-gradient(90deg, rgba(115, 20, 35, 0.9) 0%, rgba(115, 20, 35, 0.65) 50%, rgba(0,0,0,0.3) 100%);
+    z-index: 2;
+}
+.category-banner-title {
+    position: relative;
+    z-index: 3;
+    color: #fff;
+    font-size: 22px;
+    font-weight: 600;
+    margin-left: 25px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+/* Ürün Listesi Konteyneri (Banner altı) */
+.products-container {
+    padding: 5px 0 20px 0;
+    animation: fadeInDown 0.3s ease-out forwards;
+}
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Ürün Kartları (Yatay Düzen) */
+.product-item {
+    display: flex;
+    align-items: center;
+    padding: 18px 0;
+    border-bottom: 1px solid #2a2a2a;
+}
+.product-item:last-child {
+    border-bottom: none;
+}
+.product-item-img {
+    width: 90px;
+    height: 90px;
+    border-radius: 12px;
+    object-fit: cover;
+    margin-right: 15px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+.product-item-info {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-right: 10px;
+}
+.product-item-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+}
+.product-item-desc {
+    font-size: 13px;
+    color: #aaa;
+    line-height: 1.4;
+    margin-bottom: 6px;
+}
+.product-item-more {
+    font-size: 13px;
+    color: #fff;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    cursor: pointer;
+    width: fit-content;
+}
+.product-item-price {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+}
+
+/* --- KAYDIRMA ÇUBUĞU / MİNİ LOGO POPUP BUTONU (FAB) --- */
+#fab {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 65px;
+    height: 65px;
+    background-color: #000000; 
+    border-radius: 50%;
+    border: 2px solid #333; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    cursor: pointer;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+#fab:active { transform: scale(0.9); }
+
+#fab img {
+    width: 65%;
+    height: auto;
+    object-fit: contain;
+}
+
+/* --- SOSYAL MEDYA POPUP (BOTTOM SHEET) --- */
+#quick-menu-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(5px);
+    z-index: 1001;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+}
+#quick-menu-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+#quick-menu {
+    position: fixed;
+    bottom: -100%;
+    left: 0; width: 100%;
+    background: #1a1a1a;
+    border-top-left-radius: 30px;
+    border-top-right-radius: 30px;
+    padding: 30px 20px;
+    z-index: 1002;
+    transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 -5px 25px rgba(0,0,0,0.8);
+    text-align: center;
+}
+#quick-menu.active {
+    bottom: 0;
+}
+.quick-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 15px;
+}
+.quick-menu-header h2 {
+    font-size: 20px;
+    color: #fff;
+}
+.close-btn {
+    background: #333;
+    border: none;
+    color: #fff;
+    width: 35px; height: 35px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; justify-content: center; align-items: center;
+}
+
+/* Instagram Butonu */
+.instagram-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    color: #fff;
+    padding: 16px 24px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 600;
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom: 15px;
+    box-shadow: 0 5px 15px rgba(225, 48, 108, 0.4);
+}
+.instagram-btn img {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    filter: brightness(0) invert(1);
+}
+
+/* Admin Styles */
+.admin-container {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+.admin-input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 5px;
+}
+.admin-btn {
+    background: #731423;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.admin-btn:hover {
+    background: #8e182a;
+}
+.admin-card {
+    background: #1a1a1a;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #333;
+}
