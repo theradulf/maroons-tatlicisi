@@ -290,6 +290,32 @@ export default function AdminPage() {
     }
   };
 
+  const deleteAllBeverages = async () => {
+    if (!confirm("Sistemdeki 'İçecekler' kategorisi ve içindeki TÜM içecekler silinecek. Tatlılarınıza dokunulmayacak. Emin misiniz?")) return;
+    try {
+      const catSnap = await getDocs(collection(db, "categories"));
+      const bevCats = catSnap.docs.filter(d => d.data().title === "İçecekler");
+      const catIds = bevCats.map(c => c.id);
+
+      const prodSnap = await getDocs(collection(db, "products"));
+      const bevProds = prodSnap.docs.filter(d => catIds.includes(d.data().categoryId));
+
+      for (const prod of bevProds) {
+        await deleteDoc(doc(db, "products", prod.id));
+      }
+
+      for (const cat of bevCats) {
+        await deleteDoc(doc(db, "categories", cat.id));
+      }
+
+      alert("Tüm içecekler temizlendi! Şimdi ekleme butonuna sadece 1 KERE basabilirsiniz.");
+      fetchData();
+    } catch (e) {
+      console.error(e);
+      alert("Hata oluştu.");
+    }
+  };
+
   if (!user) {
     return (
       <div className="admin-container" style={{ marginTop: '100px', textAlign: 'center' }}>
@@ -321,7 +347,8 @@ export default function AdminPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h2>Yönetim Paneli</h2>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={importBeverages} className="admin-btn" style={{ background: '#2e7d32' }}>İçecekleri Aktar (Tıkla)</button>
+          <button onClick={deleteAllBeverages} className="admin-btn" style={{ background: '#d32f2f' }}>İçecekleri Temizle</button>
+          <button onClick={importBeverages} className="admin-btn" style={{ background: '#2e7d32' }}>İçecekleri Aktar (1 Kere Tıkla)</button>
           <button onClick={handleLogout} className="admin-btn">Çıkış Yap</button>
         </div>
       </div>
