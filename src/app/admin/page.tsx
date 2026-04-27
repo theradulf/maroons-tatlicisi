@@ -218,104 +218,6 @@ export default function AdminPage() {
     }
   };
 
-  const importBeverages = async () => {
-    try {
-      const beverages = [
-        {"name": "Su", "price": 40},
-        {"name": "Soda", "price": 60},
-        {"name": "Limonlu Soda", "price": 65},
-        {"name": "Elmalı Soda", "price": 65},
-        {"name": "Limonata", "price": 140},
-        {"name": "Orman Meyveli Limonata", "price": 165},
-        {"name": "Ocean Lemonade", "price": 165},
-        {"name": "Iced Latte", "price": 155},
-        {"name": "Lavender Lemonade", "price": 165},
-        {"name": "Iced Americano", "price": 150},
-        {"name": "Iced Caramel Latte", "price": 175},
-        {"name": "Iced Caramel Macchiato", "price": 175},
-        {"name": "Iced Vanilla Latte", "price": 185},
-        {"name": "Iced Mocha", "price": 180},
-        {"name": "Iced White Chocolate Mocha", "price": 175},
-        {"name": "Soğuk Filtre Kahve", "price": 130},
-        {"name": "Coca Cola (330ml)", "price": 85},
-        {"name": "Fuse Tea Şeftali", "price": 85},
-        {"name": "Fuse Tea Mango", "price": 85},
-        {"name": "Fuse Tea Limon", "price": 85},
-        {"name": "Süt", "price": 75},
-        {"name": "Çay", "price": 45},
-        {"name": "Fincan Çay", "price": 70},
-        {"name": "Türk Kahvesi", "price": 100},
-        {"name": "Double Türk Kahvesi", "price": 135},
-        {"name": "Sıcak Çikolata (Belçika Çikolatalı)", "price": 170},
-        {"name": "Filtre Kahve", "price": 120},
-        {"name": "Americano", "price": 145},
-        {"name": "Latte", "price": 160},
-        {"name": "Caramel Latte", "price": 170},
-        {"name": "Caramel Macchiato", "price": 170},
-        {"name": "Mocha", "price": 170},
-        {"name": "White Chocolate Mocha", "price": 170},
-        {"name": "Vanilla Latte", "price": 180},
-        {"name": "Flat White", "price": 185},
-        {"name": "Espresso", "price": 95},
-        {"name": "Salep", "price": 140},
-        {"name": "Double Shot Espresso", "price": 135},
-        {"name": "Cappuccino", "price": 175}
-      ];
-
-      const catRef = await addDoc(collection(db, "categories"), {
-        title: "İçecekler",
-        imageUrl: "",
-        gradient: "linear-gradient(90deg, rgba(115, 20, 35, 0.9) 0%, rgba(115, 20, 35, 0.65) 50%, rgba(0,0,0,0.3) 100%)"
-      });
-      const catId = catRef.id;
-
-      for (const bev of beverages) {
-        await addDoc(collection(db, "products"), {
-          name: bev.name,
-          desc: "",
-          price: bev.price,
-          categoryId: catId,
-          imageUrl: "",
-          priceHistory: [],
-          isVisible: true,
-          isTrending: false
-        });
-      }
-
-      alert("İçecekler başarıyla eklendi!");
-      fetchData();
-    } catch (e) {
-      console.error(e);
-      alert("Hata oluştu.");
-    }
-  };
-
-  const deleteAllBeverages = async () => {
-    if (!confirm("Sistemdeki 'İçecekler' kategorisi ve içindeki TÜM içecekler silinecek. Tatlılarınıza dokunulmayacak. Emin misiniz?")) return;
-    try {
-      const catSnap = await getDocs(collection(db, "categories"));
-      const bevCats = catSnap.docs.filter(d => d.data().title === "İçecekler");
-      const catIds = bevCats.map(c => c.id);
-
-      const prodSnap = await getDocs(collection(db, "products"));
-      const bevProds = prodSnap.docs.filter(d => catIds.includes(d.data().categoryId));
-
-      for (const prod of bevProds) {
-        await deleteDoc(doc(db, "products", prod.id));
-      }
-
-      for (const cat of bevCats) {
-        await deleteDoc(doc(db, "categories", cat.id));
-      }
-
-      alert("Tüm içecekler temizlendi! Şimdi ekleme butonuna sadece 1 KERE basabilirsiniz.");
-      fetchData();
-    } catch (e) {
-      console.error(e);
-      alert("Hata oluştu.");
-    }
-  };
-
   if (!user) {
     return (
       <div className="admin-container" style={{ marginTop: '100px', textAlign: 'center' }}>
@@ -346,11 +248,7 @@ export default function AdminPage() {
     <div className="admin-container">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h2>Yönetim Paneli</h2>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={deleteAllBeverages} className="admin-btn" style={{ background: '#d32f2f' }}>İçecekleri Temizle</button>
-          <button onClick={importBeverages} className="admin-btn" style={{ background: '#2e7d32' }}>İçecekleri Aktar (1 Kere Tıkla)</button>
-          <button onClick={handleLogout} className="admin-btn">Çıkış Yap</button>
-        </div>
+        <button onClick={handleLogout} className="admin-btn">Çıkış Yap</button>
       </div>
 
       <div className="admin-card">
@@ -367,6 +265,18 @@ export default function AdminPage() {
           value={newCatImage} 
           onChange={e => setNewCatImage(e.target.value)} 
         />
+        {newCatImage && (
+          <div style={{ marginBottom: '15px' }}>
+            <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#aaa' }}>Önizleme:</p>
+            <img 
+              src={newCatImage} 
+              alt="Önizleme" 
+              style={{ maxWidth: '100px', maxHeight: '100px', objectFit: 'cover', borderRadius: '8px' }} 
+              onError={(e) => (e.currentTarget.style.display = 'none')} 
+              onLoad={(e) => (e.currentTarget.style.display = 'block')} 
+            />
+          </div>
+        )}
         <div style={{ display: 'flex', gap: '10px' }}>
           <button onClick={saveCategory} className="admin-btn">
             {editingCategoryId ? "Kategoriyi Güncelle" : "Kategori Ekle"}
@@ -423,6 +333,18 @@ export default function AdminPage() {
           value={newProdImage} 
           onChange={e => setNewProdImage(e.target.value)} 
         />
+        {newProdImage && (
+          <div style={{ marginBottom: '15px' }}>
+            <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#aaa' }}>Önizleme:</p>
+            <img 
+              src={newProdImage} 
+              alt="Önizleme" 
+              style={{ maxWidth: '100px', maxHeight: '100px', objectFit: 'cover', borderRadius: '8px' }} 
+              onError={(e) => (e.currentTarget.style.display = 'none')} 
+              onLoad={(e) => (e.currentTarget.style.display = 'block')} 
+            />
+          </div>
+        )}
         <div style={{ display: 'flex', gap: '10px' }}>
           <button onClick={saveProduct} className="admin-btn">
             {editingProductId ? "Güncelle" : "Ürün Ekle"}
@@ -435,37 +357,75 @@ export default function AdminPage() {
 
       <div className="admin-card">
         <h3>Mevcut Ürünler</h3>
-        {products.map(p => (
-          <div key={p.id} style={{ borderBottom: '1px solid #444', padding: '15px 0' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-              <div style={{ opacity: p.isVisible === false ? 0.5 : 1 }}>
-                <strong>{p.name}</strong> - {p.price} ₺ {p.isVisible === false && <span style={{color: '#ed6c02'}}>(Gizlendi)</span>} {p.isTrending && <span style={{color: '#ffb300'}}>⭐ Trend</span>}
-                {p.priceHistory && p.priceHistory.length > 0 && (
-                  <div style={{ fontSize: '12px', color: '#aaa', marginTop: '5px' }}>
-                    <strong>Fiyat Geçmişi:</strong>
-                    <ul style={{ margin: '5px 0 0 20px', padding: 0 }}>
-                      {p.priceHistory.map((history: any, idx: number) => (
-                        <li key={idx}>
-                          {new Date(history.date).toLocaleDateString('tr-TR')} tarihinde {history.oldPrice} ₺ idi.
-                        </li>
-                      ))}
-                    </ul>
+        {categories.map(c => {
+          const categoryProducts = products.filter(p => p.categoryId === c.id);
+          if (categoryProducts.length === 0) return null;
+          
+          return (
+            <div key={c.id} style={{ marginBottom: '30px' }}>
+              <h4 style={{ borderBottom: '2px solid #555', paddingBottom: '10px', color: '#e0e0e0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {c.imageUrl && <img src={c.imageUrl} alt={c.title} style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }} />}
+                {c.title}
+              </h4>
+              {categoryProducts.map(p => (
+                <div key={p.id} style={{ borderBottom: '1px solid #333', padding: '15px 0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <div style={{ opacity: p.isVisible === false ? 0.5 : 1 }}>
+                      <strong>{p.name}</strong> - {p.price} ₺ {p.isVisible === false && <span style={{color: '#ed6c02'}}>(Gizlendi)</span>} {p.isTrending && <span style={{color: '#ffb300'}}>⭐ Trend</span>}
+                      {p.priceHistory && p.priceHistory.length > 0 && (
+                        <div style={{ fontSize: '12px', color: '#aaa', marginTop: '5px' }}>
+                          <strong>Fiyat Geçmişi:</strong>
+                          <ul style={{ margin: '5px 0 0 20px', padding: 0 }}>
+                            {p.priceHistory.map((history: any, idx: number) => (
+                              <li key={idx}>
+                                {new Date(history.date).toLocaleDateString('tr-TR')} tarihinde {history.oldPrice} ₺ idi.
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '250px' }}>
+                      <button onClick={() => setTrending(p.id)} className="admin-btn" style={{ background: p.isTrending ? '#ffb300' : '#444', color: p.isTrending ? '#000' : '#fff', padding: '5px 10px' }}>
+                        {p.isTrending ? "Trendi Kaldır" : "Trend Yap"}
+                      </button>
+                      <button onClick={() => toggleVisibility(p)} className="admin-btn" style={{ background: p.isVisible === false ? '#2e7d32' : '#ed6c02', padding: '5px 10px' }}>
+                        {p.isVisible === false ? "Göster" : "Gizle"}
+                      </button>
+                      <button onClick={() => startEditingProduct(p)} className="admin-btn" style={{ background: '#1976d2', padding: '5px 10px' }}>Düzenle</button>
+                      <button onClick={() => deleteProduct(p.id)} className="admin-btn" style={{ background: '#d32f2f', padding: '5px 10px' }}>Sil</button>
+                    </div>
                   </div>
-                )}
-              </div>
-              <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '250px' }}>
-                <button onClick={() => setTrending(p.id)} className="admin-btn" style={{ background: p.isTrending ? '#ffb300' : '#444', color: p.isTrending ? '#000' : '#fff', padding: '5px 10px' }}>
-                  {p.isTrending ? "Trendi Kaldır" : "Trend Yap"}
-                </button>
-                <button onClick={() => toggleVisibility(p)} className="admin-btn" style={{ background: p.isVisible === false ? '#2e7d32' : '#ed6c02', padding: '5px 10px' }}>
-                  {p.isVisible === false ? "Göster" : "Gizle"}
-                </button>
-                <button onClick={() => startEditingProduct(p)} className="admin-btn" style={{ background: '#1976d2', padding: '5px 10px' }}>Düzenle</button>
-                <button onClick={() => deleteProduct(p.id)} className="admin-btn" style={{ background: '#d32f2f', padding: '5px 10px' }}>Sil</button>
-              </div>
+                </div>
+              ))}
             </div>
+          );
+        })}
+
+        {products.filter(p => !categories.find(c => c.id === p.categoryId)).length > 0 && (
+          <div style={{ marginBottom: '30px' }}>
+            <h4 style={{ borderBottom: '2px solid #555', paddingBottom: '10px', color: '#e0e0e0' }}>Kategorisiz Ürünler</h4>
+            {products.filter(p => !categories.find(c => c.id === p.categoryId)).map(p => (
+                <div key={p.id} style={{ borderBottom: '1px solid #333', padding: '15px 0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <div style={{ opacity: p.isVisible === false ? 0.5 : 1 }}>
+                      <strong>{p.name}</strong> - {p.price} ₺ {p.isVisible === false && <span style={{color: '#ed6c02'}}>(Gizlendi)</span>} {p.isTrending && <span style={{color: '#ffb300'}}>⭐ Trend</span>}
+                    </div>
+                    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '250px' }}>
+                      <button onClick={() => setTrending(p.id)} className="admin-btn" style={{ background: p.isTrending ? '#ffb300' : '#444', color: p.isTrending ? '#000' : '#fff', padding: '5px 10px' }}>
+                        {p.isTrending ? "Trendi Kaldır" : "Trend Yap"}
+                      </button>
+                      <button onClick={() => toggleVisibility(p)} className="admin-btn" style={{ background: p.isVisible === false ? '#2e7d32' : '#ed6c02', padding: '5px 10px' }}>
+                        {p.isVisible === false ? "Göster" : "Gizle"}
+                      </button>
+                      <button onClick={() => startEditingProduct(p)} className="admin-btn" style={{ background: '#1976d2', padding: '5px 10px' }}>Düzenle</button>
+                      <button onClick={() => deleteProduct(p.id)} className="admin-btn" style={{ background: '#d32f2f', padding: '5px 10px' }}>Sil</button>
+                    </div>
+                  </div>
+                </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
