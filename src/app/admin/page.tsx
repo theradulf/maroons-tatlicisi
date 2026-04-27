@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { auth, db, storage } from "../../firebase";
+import { auth, db } from "../../firebase";
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut, User } from "firebase/auth";
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
 export default function AdminPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -72,31 +71,31 @@ export default function AdminPage() {
 
     try {
       setIsUploading(true);
-      // Orijinal resmi max 800x800 olacak şekilde küçült (boyut ve internet dostu)
+      // Orijinal resmi max 800x800 olacak şekilde küçült
       const resizedBlob = await resizeImage(file, 800, 800);
       
-      const fileName = `${Date.now()}_${file.name}`;
-      const storageRef = ref(storage, `images/${fileName}`);
+      const formData = new FormData();
+      formData.append('image', resizedBlob, file.name);
       
-      const uploadTask = uploadBytesResumable(storageRef, resizedBlob);
+      const apiKey = '706ce71667e7b390d7300ef28d1ce8ff';
+      const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+        method: 'POST',
+        body: formData
+      });
       
-      uploadTask.on('state_changed', 
-        null, 
-        (error) => {
-          console.error(error);
-          alert("Resim yüklenemedi: " + error.message);
-          setIsUploading(false);
-        }, 
-        async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          if (isCategory) {
-            setNewCatImage(downloadURL);
-          } else {
-            setNewProdImage(downloadURL);
-          }
-          setIsUploading(false);
+      const data = await response.json();
+      
+      if (data.success) {
+        const downloadURL = data.data.url;
+        if (isCategory) {
+          setNewCatImage(downloadURL);
+        } else {
+          setNewProdImage(downloadURL);
         }
-      );
+      } else {
+        alert("Resim yüklenemedi: " + (data.error?.message || "Bilinmeyen hata"));
+      }
+      setIsUploading(false);
     } catch (err) {
       console.error(err);
       alert("Resim işlenirken hata oluştu.");
