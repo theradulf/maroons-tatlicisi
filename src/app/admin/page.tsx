@@ -218,6 +218,78 @@ export default function AdminPage() {
     }
   };
 
+  const importBeverages = async () => {
+    try {
+      const beverages = [
+        {"name": "Su", "price": 40},
+        {"name": "Soda", "price": 60},
+        {"name": "Limonlu Soda", "price": 65},
+        {"name": "Elmalı Soda", "price": 65},
+        {"name": "Limonata", "price": 140},
+        {"name": "Orman Meyveli Limonata", "price": 165},
+        {"name": "Ocean Lemonade", "price": 165},
+        {"name": "Iced Latte", "price": 155},
+        {"name": "Lavender Lemonade", "price": 165},
+        {"name": "Iced Americano", "price": 150},
+        {"name": "Iced Caramel Latte", "price": 175},
+        {"name": "Iced Caramel Macchiato", "price": 175},
+        {"name": "Iced Vanilla Latte", "price": 185},
+        {"name": "Iced Mocha", "price": 180},
+        {"name": "Iced White Chocolate Mocha", "price": 175},
+        {"name": "Soğuk Filtre Kahve", "price": 130},
+        {"name": "Coca Cola (330ml)", "price": 85},
+        {"name": "Fuse Tea Şeftali", "price": 85},
+        {"name": "Fuse Tea Mango", "price": 85},
+        {"name": "Fuse Tea Limon", "price": 85},
+        {"name": "Süt", "price": 75},
+        {"name": "Çay", "price": 45},
+        {"name": "Fincan Çay", "price": 70},
+        {"name": "Türk Kahvesi", "price": 100},
+        {"name": "Double Türk Kahvesi", "price": 135},
+        {"name": "Sıcak Çikolata (Belçika Çikolatalı)", "price": 170},
+        {"name": "Filtre Kahve", "price": 120},
+        {"name": "Americano", "price": 145},
+        {"name": "Latte", "price": 160},
+        {"name": "Caramel Latte", "price": 170},
+        {"name": "Caramel Macchiato", "price": 170},
+        {"name": "Mocha", "price": 170},
+        {"name": "White Chocolate Mocha", "price": 170},
+        {"name": "Vanilla Latte", "price": 180},
+        {"name": "Flat White", "price": 185},
+        {"name": "Espresso", "price": 95},
+        {"name": "Salep", "price": 140},
+        {"name": "Double Shot Espresso", "price": 135},
+        {"name": "Cappuccino", "price": 175}
+      ];
+
+      const catRef = await addDoc(collection(db, "categories"), {
+        title: "İçecekler",
+        imageUrl: "",
+        gradient: "linear-gradient(90deg, rgba(115, 20, 35, 0.9) 0%, rgba(115, 20, 35, 0.65) 50%, rgba(0,0,0,0.3) 100%)"
+      });
+      const catId = catRef.id;
+
+      for (const bev of beverages) {
+        await addDoc(collection(db, "products"), {
+          name: bev.name,
+          desc: "",
+          price: bev.price,
+          categoryId: catId,
+          imageUrl: "",
+          priceHistory: [],
+          isVisible: true,
+          isTrending: false
+        });
+      }
+
+      alert("İçecekler başarıyla eklendi!");
+      fetchData();
+    } catch (e) {
+      console.error(e);
+      alert("Hata oluştu.");
+    }
+  };
+
   if (!user) {
     return (
       <div className="admin-container" style={{ marginTop: '100px', textAlign: 'center' }}>
@@ -248,7 +320,10 @@ export default function AdminPage() {
     <div className="admin-container">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h2>Yönetim Paneli</h2>
-        <button onClick={handleLogout} className="admin-btn">Çıkış Yap</button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={importBeverages} className="admin-btn" style={{ background: '#2e7d32' }}>İçecekleri Aktar (Tıkla)</button>
+          <button onClick={handleLogout} className="admin-btn">Çıkış Yap</button>
+        </div>
       </div>
 
       <div className="admin-card">
