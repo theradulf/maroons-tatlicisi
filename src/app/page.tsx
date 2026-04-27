@@ -52,22 +52,24 @@ export default function Home() {
         const catSnap = await getDocs(collection(db, "categories"));
         const prodSnap = await getDocs(collection(db, "products"));
 
-        const prods = prodSnap.docs.map(d => ({ id: d.id, ...d.data() } as Product));
-        const cats = catSnap.docs.map(d => {
-          const catData = d.data();
-          return {
-            id: d.id,
-            title: catData.title || "Unnamed Category",
-            imageUrl: catData.imageUrl || "",
-            gradient: catData.gradient || "linear-gradient(90deg, rgba(115, 20, 35, 0.9) 0%, rgba(115, 20, 35, 0.65) 50%, rgba(0,0,0,0.3) 100%)",
-            products: prods.filter(p => (p as any).categoryId === d.id && p.isVisible !== false)
-          } as Category;
-        });
-        
-        // Sort categories if they have an 'order' field (optional)
-        setCategories(cats);
+        const fetchedProds = prodSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+        const sortedProds = fetchedProds.map((p, i) => ({ ...p, order: typeof p.order === 'number' ? p.order : i })).sort((a, b) => a.order - b.order) as Product[];
 
-        const trend = prods.find(p => p.isTrending && p.isVisible !== false);
+        const fetchedCats = catSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+        const sortedCats = fetchedCats.map((c, i) => {
+          return {
+            id: c.id,
+            title: c.title || "Unnamed Category",
+            imageUrl: c.imageUrl || "",
+            gradient: c.gradient || "linear-gradient(90deg, rgba(115, 20, 35, 0.9) 0%, rgba(115, 20, 35, 0.65) 50%, rgba(0,0,0,0.3) 100%)",
+            order: typeof c.order === 'number' ? c.order : i,
+            products: sortedProds.filter(p => (p as any).categoryId === c.id && p.isVisible !== false)
+          };
+        }).sort((a, b) => a.order - b.order);
+        
+        setCategories(sortedCats as Category[]);
+
+        const trend = sortedProds.find(p => p.isTrending && p.isVisible !== false);
         setTrendingProduct(trend || null);
         setIsLoading(false);
       } catch (error) {

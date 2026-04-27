@@ -67,10 +67,14 @@ export default function AdminPage() {
   const fetchData = async () => {
     try {
       const catSnap = await getDocs(collection(db, "categories"));
-      setCategories(catSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const fetchedCats = catSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const sortedCats = fetchedCats.map((c: any, i) => ({ ...c, order: typeof c.order === 'number' ? c.order : i })).sort((a, b) => a.order - b.order);
+      setCategories(sortedCats);
 
       const prodSnap = await getDocs(collection(db, "products"));
-      setProducts(prodSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const fetchedProds = prodSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const sortedProds = fetchedProds.map((p: any, i) => ({ ...p, order: typeof p.order === 'number' ? p.order : i })).sort((a, b) => a.order - b.order);
+      setProducts(sortedProds);
     } catch (e) {
       console.log("Hata: Veriler çekilemedi. Firebase ayarlarınızı kontrol edin.", e);
     }
@@ -101,7 +105,8 @@ export default function AdminPage() {
         await addDoc(collection(db, "categories"), {
           title: newCatTitle,
           imageUrl: newCatImage,
-          gradient: "linear-gradient(90deg, rgba(115, 20, 35, 0.9) 0%, rgba(115, 20, 35, 0.65) 50%, rgba(0,0,0,0.3) 100%)"
+          gradient: "linear-gradient(90deg, rgba(115, 20, 35, 0.9) 0%, rgba(115, 20, 35, 0.65) 50%, rgba(0,0,0,0.3) 100%)",
+          order: categories.length
         });
       }
       cancelEditingCategory();
@@ -160,7 +165,8 @@ export default function AdminPage() {
           price: currentPrice,
           categoryId: newProdCat,
           imageUrl: newProdImage,
-          priceHistory: []
+          priceHistory: [],
+          order: products.filter(p => p.categoryId === newProdCat).length
         });
       }
       
@@ -215,6 +221,45 @@ export default function AdminPage() {
     } catch (e) {
       console.error(e);
       alert("Hata oluştu.");
+    }
+  };
+
+  const moveCategory = async (index: number, direction: -1 | 1) => {
+    if (index + direction < 0 || index + direction >= categories.length) return;
+    try {
+      const catA = categories[index];
+      const catB = categories[index + direction];
+      
+      const newOrderA = catB.order !== undefined ? catB.order : index + direction;
+      const newOrderB = catA.order !== undefined ? catA.order : index;
+
+      await updateDoc(doc(db, "categories", catA.id), { order: newOrderA });
+      await updateDoc(doc(db, "categories", catB.id), { order: newOrderB });
+      fetchData();
+    } catch (e) {
+      console.error(e);
+      alert("Sıralama değiştirilirken hata oluştu.");
+    }
+  };
+
+  const moveProduct = async (product: any, direction: -1 | 1) => {
+    try {
+      const categoryProducts = products.filter(p => p.categoryId === product.categoryId);
+      const index = categoryProducts.findIndex(p => p.id === product.id);
+      if (index + direction < 0 || index + direction >= categoryProducts.length) return;
+      
+      const prodA = categoryProducts[index];
+      const prodB = categoryProducts[index + direction];
+      
+      const newOrderA = prodB.order !== undefined ? prodB.order : index + direction;
+      const newOrderB = prodA.order !== undefined ? prodA.order : index;
+
+      await updateDoc(doc(db, "products", prodA.id), { order: newOrderA });
+      await updateDoc(doc(db, "products", prodB.id), { order: newOrderB });
+      fetchData();
+    } catch (e) {
+      console.error(e);
+      alert("Sıralama değiştirilirken hata oluştu.");
     }
   };
 
@@ -289,10 +334,12 @@ export default function AdminPage() {
 
       <div className="admin-card">
         <h3>Mevcut Kategoriler</h3>
-        {categories.map(c => (
+        {categories.map((c, index) => (
           <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #444', padding: '10px 0' }}>
             <div><strong>{c.title}</strong></div>
             <div style={{ display: 'flex', gap: '5px' }}>
+              <button onClick={() => moveCategory(index, -1)} disabled={index === 0} className="admin-btn" style={{ background: '#555', padding: '5px 10px', opacity: index === 0 ? 0.3 : 1 }}>▲</button>
+              <button onClick={() => moveCategory(index, 1)} disabled={index === categories.length - 1} className="admin-btn" style={{ background: '#555', padding: '5px 10px', opacity: index === categories.length - 1 ? 0.3 : 1 }}>▼</button>
               <button onClick={() => startEditingCategory(c)} className="admin-btn" style={{ background: '#1976d2', padding: '5px 10px' }}>Düzenle</button>
               <button onClick={() => deleteCategory(c.id)} className="admin-btn" style={{ background: '#d32f2f', padding: '5px 10px' }}>Sil</button>
             </div>
@@ -367,7 +414,7 @@ export default function AdminPage() {
                 {c.imageUrl && <img src={c.imageUrl} alt={c.title} style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }} />}
                 {c.title}
               </h4>
-              {categoryProducts.map(p => (
+              {categoryProducts.map((p, index) => (
                 <div key={p.id} style={{ borderBottom: '1px solid #333', padding: '15px 0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                     <div style={{ opacity: p.isVisible === false ? 0.5 : 1, display: 'flex', gap: '15px', alignItems: 'center' }}>
@@ -388,7 +435,9 @@ export default function AdminPage() {
                         )}
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '250px', alignItems: 'flex-start' }}>
+                    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '300px', alignItems: 'flex-start' }}>
+                      <button onClick={() => moveProduct(p, -1)} disabled={index === 0} className="admin-btn" style={{ background: '#555', padding: '5px 10px', opacity: index === 0 ? 0.3 : 1 }}>▲</button>
+                      <button onClick={() => moveProduct(p, 1)} disabled={index === categoryProducts.length - 1} className="admin-btn" style={{ background: '#555', padding: '5px 10px', opacity: index === categoryProducts.length - 1 ? 0.3 : 1 }}>▼</button>
                       <button onClick={() => setTrending(p.id)} className="admin-btn" style={{ background: p.isTrending ? '#ffb300' : '#444', color: p.isTrending ? '#000' : '#fff', padding: '5px 10px' }}>
                         {p.isTrending ? "Trendi Kaldır" : "Trend Yap"}
                       </button>
