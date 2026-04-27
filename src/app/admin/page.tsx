@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { auth, db } from "../../firebase";
+import { auth, db, storage } from "../../firebase";
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut, User } from "firebase/auth";
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
 export default function AdminPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -23,6 +24,85 @@ export default function AdminPage() {
   const [newProdPrice, setNewProdPrice] = useState("");
   const [newProdCat, setNewProdCat] = useState("");
   const [newProdImage, setNewProdImage] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+
+  const resizeImage = (file: File, maxWidth: number, maxHeight: number): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxWidth) {
+              height *= maxWidth / width;
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width *= maxHeight / height;
+              height = maxHeight;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('Canvas to Blob failed'));
+          }, 'image/jpeg', 0.85); // 85% kalite ile küçült
+        };
+        img.onerror = error => reject(error);
+      };
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isCategory: boolean) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploading(true);
+      // Orijinal resmi max 800x800 olacak şekilde küçült (boyut ve internet dostu)
+      const resizedBlob = await resizeImage(file, 800, 800);
+      
+      const fileName = `${Date.now()}_${file.name}`;
+      const storageRef = ref(storage, `images/${fileName}`);
+      
+      const uploadTask = uploadBytesResumable(storageRef, resizedBlob);
+      
+      uploadTask.on('state_changed', 
+        null, 
+        (error) => {
+          console.error(error);
+          alert("Resim yüklenemedi: " + error.message);
+          setIsUploading(false);
+        }, 
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          if (isCategory) {
+            setNewCatImage(downloadURL);
+          } else {
+            setNewProdImage(downloadURL);
+          }
+          setIsUploading(false);
+        }
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Resim işlenirken hata oluştu.");
+      setIsUploading(false);
+    }
+  };
 
   const startEditingCategory = (category: any) => {
     setEditingCategoryId(category.id);
@@ -310,6 +390,17 @@ export default function AdminPage() {
           value={newCatImage} 
           onChange={e => setNewCatImage(e.target.value)} 
         />
+        <div style={{ marginBottom: '10px' }}>
+          <label style={{ fontSize: '14px', color: '#ccc', marginRight: '10px' }}>Veya Cihazdan Yükle:</label>
+          <input 
+            type="file" 
+            accept="image/*" 
+            onChange={(e) => handleImageUpload(e, true)} 
+            disabled={isUploading}
+            style={{ color: '#fff' }}
+          />
+          {isUploading && <span style={{ color: '#ffb300', fontSize: '12px', marginLeft: '10px' }}>Yükleniyor ve küçültülüyor...</span>}
+        </div>
         {newCatImage && (
           <div style={{ marginBottom: '15px' }}>
             <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#aaa' }}>Önizleme:</p>
@@ -380,6 +471,17 @@ export default function AdminPage() {
           value={newProdImage} 
           onChange={e => setNewProdImage(e.target.value)} 
         />
+        <div style={{ marginBottom: '10px' }}>
+          <label style={{ fontSize: '14px', color: '#ccc', marginRight: '10px' }}>Veya Cihazdan Yükle:</label>
+          <input 
+            type="file" 
+            accept="image/*" 
+            onChange={(e) => handleImageUpload(e, false)} 
+            disabled={isUploading}
+            style={{ color: '#fff' }}
+          />
+          {isUploading && <span style={{ color: '#ffb300', fontSize: '12px', marginLeft: '10px' }}>Yükleniyor ve küçültülüyor...</span>}
+        </div>
         {newProdImage && (
           <div style={{ marginBottom: '15px' }}>
             <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#aaa' }}>Önizleme:</p>
