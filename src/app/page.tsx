@@ -141,7 +141,7 @@ export default function Home() {
         <div style={{ padding: '0 20px', marginBottom: '30px' }}>
           <input 
             type="text" 
-            placeholder="🔍 Tatlı veya içerik arayın..." 
+            placeholder="Tatlı veya içerik arayın..." 
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
