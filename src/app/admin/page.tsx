@@ -153,6 +153,41 @@ export default function AdminPage() {
     }
   };
 
+  const toggleVisibility = async (product: any) => {
+    try {
+      const currentVisibility = product.isVisible !== false; // defaults to true
+      await updateDoc(doc(db, "products", product.id), {
+        isVisible: !currentVisibility
+      });
+      fetchData();
+    } catch (e) {
+      console.error(e);
+      alert("Hata oluştu.");
+    }
+  };
+
+  const setTrending = async (productId: string) => {
+    try {
+      const currentlyTrending = products.find(p => p.isTrending);
+      if (currentlyTrending && currentlyTrending.id !== productId) {
+        await updateDoc(doc(db, "products", currentlyTrending.id), {
+          isTrending: false
+        });
+      }
+      
+      const targetProduct = products.find(p => p.id === productId);
+      if (targetProduct) {
+        await updateDoc(doc(db, "products", productId), {
+          isTrending: !targetProduct.isTrending
+        });
+      }
+      fetchData();
+    } catch (e) {
+      console.error(e);
+      alert("Hata oluştu.");
+    }
+  };
+
   if (!user) {
     return (
       <div className="admin-container" style={{ marginTop: '100px', textAlign: 'center' }}>
@@ -251,8 +286,8 @@ export default function AdminPage() {
         {products.map(p => (
           <div key={p.id} style={{ borderBottom: '1px solid #444', padding: '15px 0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-              <div>
-                <strong>{p.name}</strong> - {p.price} ₺
+              <div style={{ opacity: p.isVisible === false ? 0.5 : 1 }}>
+                <strong>{p.name}</strong> - {p.price} ₺ {p.isVisible === false && <span style={{color: '#ed6c02'}}>(Gizlendi)</span>} {p.isTrending && <span style={{color: '#ffb300'}}>⭐ Trend</span>}
                 {p.priceHistory && p.priceHistory.length > 0 && (
                   <div style={{ fontSize: '12px', color: '#aaa', marginTop: '5px' }}>
                     <strong>Fiyat Geçmişi:</strong>
@@ -266,7 +301,13 @@ export default function AdminPage() {
                   </div>
                 )}
               </div>
-              <div style={{ display: 'flex', gap: '5px' }}>
+              <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '250px' }}>
+                <button onClick={() => setTrending(p.id)} className="admin-btn" style={{ background: p.isTrending ? '#ffb300' : '#444', color: p.isTrending ? '#000' : '#fff', padding: '5px 10px' }}>
+                  {p.isTrending ? "Trendi Kaldır" : "Trend Yap"}
+                </button>
+                <button onClick={() => toggleVisibility(p)} className="admin-btn" style={{ background: p.isVisible === false ? '#2e7d32' : '#ed6c02', padding: '5px 10px' }}>
+                  {p.isVisible === false ? "Göster" : "Gizle"}
+                </button>
                 <button onClick={() => startEditingProduct(p)} className="admin-btn" style={{ background: '#1976d2', padding: '5px 10px' }}>Düzenle</button>
                 <button onClick={() => deleteProduct(p.id)} className="admin-btn" style={{ background: '#d32f2f', padding: '5px 10px' }}>Sil</button>
               </div>

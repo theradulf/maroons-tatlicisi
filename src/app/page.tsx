@@ -10,6 +10,8 @@ interface Product {
   desc: string;
   price: number;
   imageUrl: string;
+  isVisible?: boolean;
+  isTrending?: boolean;
 }
 
 interface Category {
@@ -26,6 +28,7 @@ export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [openCategoryId, setOpenCategoryId] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
+  const [trendingProduct, setTrendingProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     // Splash screen animation
@@ -55,12 +58,15 @@ export default function Home() {
             title: catData.title || "Unnamed Category",
             imageUrl: catData.imageUrl || "",
             gradient: catData.gradient || "linear-gradient(90deg, rgba(115, 20, 35, 0.9) 0%, rgba(115, 20, 35, 0.65) 50%, rgba(0,0,0,0.3) 100%)",
-            products: prods.filter(p => (p as any).categoryId === d.id)
+            products: prods.filter(p => (p as any).categoryId === d.id && p.isVisible !== false)
           } as Category;
         });
         
         // Sort categories if they have an 'order' field (optional)
         setCategories(cats);
+
+        const trend = prods.find(p => p.isTrending && p.isVisible !== false);
+        setTrendingProduct(trend || null);
       } catch (error) {
         console.error("Error fetching menu data", error);
       }
@@ -96,6 +102,28 @@ export default function Home() {
       </header>
 
       <main>
+        {trendingProduct && (
+          <div style={{ marginBottom: '40px', padding: '0 20px' }}>
+            <h2 style={{ textAlign: 'center', color: '#ffb300', marginBottom: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '24px' }}>🔥</span> Haftanın Yıldızı <span style={{ fontSize: '24px' }}>🔥</span>
+            </h2>
+            <div style={{ background: '#1a1a1a', borderRadius: '15px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', border: '1px solid #333' }}>
+              {trendingProduct.imageUrl ? (
+                <img src={trendingProduct.imageUrl} alt={trendingProduct.name} style={{ width: '100%', height: '250px', objectFit: 'cover' }} />
+              ) : (
+                <div style={{ width: '100%', height: '250px', backgroundColor: '#333' }}></div>
+              )}
+              <div style={{ padding: '20px', textAlign: 'center' }}>
+                <h3 style={{ margin: '0 0 10px 0', fontSize: '24px', color: '#fff' }}>{trendingProduct.name}</h3>
+                <p style={{ color: '#aaa', margin: '0 0 15px 0', fontSize: '14px' }}>{trendingProduct.desc}</p>
+                <div style={{ display: 'inline-block', background: '#731423', color: '#fff', padding: '10px 25px', borderRadius: '25px', fontSize: '18px', fontWeight: 'bold' }}>
+                  {trendingProduct.price} ₺
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <h1 className="section-title">Menümüz</h1>
         <div id="menu-container">
           {categories.map((category) => (
