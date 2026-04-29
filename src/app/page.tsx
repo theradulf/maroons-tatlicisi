@@ -28,6 +28,7 @@ export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [openCategoryId, setOpenCategoryId] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
+  const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
   const [trendingProduct, setTrendingProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -207,21 +208,28 @@ export default function Home() {
 
               {openCategoryId === category.id && (
                 <div className="products-container" style={{ display: 'block' }}>
-                  {category.products.map(product => (
-                    <div key={product.id} className="product-item">
-                      {product.imageUrl ? (
-                        <img src={product.imageUrl} className="product-item-img" loading="lazy" alt={product.name} />
-                      ) : (
-                        <div className="product-item-img" style={{ backgroundColor: '#333' }}></div>
-                      )}
-                      <div className="product-item-info">
-                        <div className="product-item-title">{product.name}</div>
-                        <div className="product-item-desc">{product.desc}</div>
-                        <div className="product-item-more">Daha fazlası için tıklayınız</div>
+                  {category.products.map(product => {
+                    const isExpanded = expandedProductId === product.id;
+                    return (
+                      <div 
+                        key={product.id} 
+                        className={`product-item ${isExpanded ? 'expanded' : ''}`}
+                        onClick={() => setExpandedProductId(isExpanded ? null : product.id)}
+                      >
+                        {product.imageUrl ? (
+                          <img src={product.imageUrl} className="product-item-img" loading="lazy" alt={product.name} />
+                        ) : (
+                          <div className="product-item-img" style={{ backgroundColor: '#333' }}></div>
+                        )}
+                        <div className="product-item-info">
+                          <div className="product-item-title">{product.name}</div>
+                          <div className="product-item-desc">{product.desc}</div>
+                          <div className="product-item-more">Daha fazlası için tıklayınız</div>
+                        </div>
+                        <div className="product-item-price">{product.price} ₺</div>
                       </div>
-                      <div className="product-item-price">{product.price} ₺</div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

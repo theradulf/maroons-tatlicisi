@@ -134,16 +134,30 @@ main {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Ürün Kartları (Yatay Düzen) */
 .product-item {
     display: flex;
     align-items: center;
     padding: 18px 0;
     border-bottom: 1px solid #2a2a2a;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    overflow: hidden;
 }
 .product-item:last-child {
     border-bottom: none;
 }
+/* Genişletilmiş (Expanded) Durum */
+.product-item.expanded {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 25px 15px;
+    background: rgba(115, 20, 35, 0.08); /* Bordo vurgu */
+    border-radius: 16px;
+    margin: 15px 0;
+    border-bottom: none;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+}
+
 .product-item-img {
     width: 90px;
     height: 90px;
@@ -152,39 +166,90 @@ main {
     margin-right: 15px;
     flex-shrink: 0;
     box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+.product-item.expanded .product-item-img {
+    width: 100%;
+    height: 220px;
+    margin-right: 0;
+    margin-bottom: 18px;
+    border-radius: 16px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.6);
+}
+
 .product-item-info {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     justify-content: center;
     padding-right: 10px;
+    transition: all 0.3s ease;
+    width: 100%;
 }
+.product-item.expanded .product-item-info {
+    padding-right: 0;
+}
+
 .product-item-title {
     font-size: 18px;
     font-weight: 600;
     color: #fff;
     margin-bottom: 4px;
+    transition: all 0.3s ease;
 }
+.product-item.expanded .product-item-title {
+    font-size: 24px;
+    margin-bottom: 8px;
+    color: #ffb300; /* Başlık vurgusu */
+}
+
 .product-item-desc {
     font-size: 13px;
     color: #aaa;
     line-height: 1.4;
     margin-bottom: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Normalde 2 satır göster */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: all 0.3s ease;
 }
+.product-item.expanded .product-item-desc {
+    font-size: 15px;
+    color: #eee;
+    -webkit-line-clamp: unset; /* Tamamını göster */
+    margin-bottom: 15px;
+}
+
 .product-item-more {
     font-size: 13px;
-    color: #fff;
+    color: #731423;
+    font-weight: 600;
     text-decoration: underline;
     text-decoration-style: dotted;
     cursor: pointer;
     width: fit-content;
+    transition: all 0.3s ease;
 }
+.product-item.expanded .product-item-more {
+    display: none; /* Genişleyince gizle */
+}
+
 .product-item-price {
     font-size: 20px;
     font-weight: 600;
     color: #fff;
     white-space: nowrap;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.product-item.expanded .product-item-price {
+    align-self: flex-end;
+    font-size: 24px;
+    background: #731423;
+    padding: 8px 25px;
+    border-radius: 25px;
+    box-shadow: 0 4px 12px rgba(115, 20, 35, 0.5);
+    margin-top: 5px;
 }
 
 /* --- KAYDIRMA ÇUBUĞU / MİNİ LOGO POPUP BUTONU (FAB) --- */
