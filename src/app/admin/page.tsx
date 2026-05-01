@@ -122,6 +122,9 @@ export default function AdminPage() {
     setNewProdPrice(product.price.toString());
     setNewProdCat(product.categoryId);
     setNewProdImage(product.imageUrl || "");
+    setTimeout(() => {
+      document.getElementById('product-edit-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
   };
 
   const cancelEditing = () => {
@@ -459,7 +462,7 @@ export default function AdminPage() {
         ))}
       </div>
 
-      <div className="admin-card">
+      <div className="admin-card" id="product-edit-form">
         <h3>{editingProductId ? "Ürünü Düzenle" : "Yeni Ürün Ekle"}</h3>
         <select className="admin-input" value={newProdCat} onChange={e => setNewProdCat(e.target.value)}>
           <option value="">-- Kategori Seçin --</option>
